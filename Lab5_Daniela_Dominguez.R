@@ -1,0 +1,197 @@
+library(nycflights13)
+library(tidyverse)
+library(lubridate)
+library(dplyr)
+
+
+# ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * 
+
+# Parte I
+
+eclipse <- "aug, 21th 2017 18:26:40"
+# mdy_hms(eclipse, tz = "GMT")
+synodicM <- days(29) + hours(12) + minutes(44) + seconds(3)
+saros <- synodicM * 233
+siguiente <- mdy_hms(eclipse, tz = "GMT") + saros
+siguiente # el siguiente eclipse sera en 23 de junio del 2036, a las 9 de la mañana con 30 minutos y 19 segundos
+
+
+# ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * 
+
+# Parte II
+
+# data <- read_excel("~/Documents/6to semestre/Data Wrangling/Lab5/data.xlsx")
+data <- read_csv("~/Documents/6to semestre/Data Wrangling/Lab5/data.csv")
+# format(as.Date(43020, origin = "1899-12-30"), '%d-%m-%Y')
+df2 <- as.data.frame(sapply(data,gsub,pattern="/",replacement="-"))
+head(df2)
+
+dmy(head(df2[,1]))
+
+
+# 1.	¿En qué meses existe una mayor cantidad de llamadas por código?
+a <- df2 %>% 
+  mutate(df2, mes = month(dmy(df2$`Fecha Creación`)))
+
+a %>% 
+  select(mes,Cod) %>% 
+  group_by(mes,Cod) %>% 
+  summarise(cantidad = n()) %>% 
+  arrange(desc(cantidad)) %>% 
+  group_by(Cod) %>% 
+  slice_max(cantidad, n = 1)
+
+# 2.	¿Qué día de la semana es el más ocupado?
+
+b <- df2 %>% 
+  mutate(df2, dia = weekdays(as.Date(dmy(df2$`Fecha Creación`),'%d-%m-%Y')))
+
+dia_ocupado <- b %>% 
+  group_by(dia) %>% 
+  summarise(cantidad = n()) %>% 
+  arrange(desc(cantidad))
+
+dia_ocupado
+# 3.	¿Qué mes es el más ocupado?
+
+mes_opcupado <-a %>% 
+  group_by(mes) %>% 
+  summarise(llamadas = n()) %>% 
+  arrange(desc(llamadas)) 
+
+mes_opcupado
+
+# 4.	¿Existe una concentración o estacionalidad en la cantidad de llamadas?
+
+mes_opcupado
+dia_ocupado
+#Con base a estas tablas se puede observar que las llamadas realizadas tienen cantidades cercanas,
+#por lo que podremos decie que no existe alguna concentracion o estacionalidad en las llamadas
+
+# 5.	¿Cuántos minutos dura la llamada promedio?
+c <- data
+c$duracion <- c$`Hora Final` - c$`Hora Creación`
+c$duracion <- ifelse(c$duracion > 0, 
+                               (c$`Hora Final` - c$`Hora Creación`)/60,
+                               (((c$`Hora Final` - c$`Hora Creación`)/60)-1440)*-1)
+
+llamada_promedio <- c %>% filter(Call == 1) %>% summarise(Promedio_Minutos = mean(duracion))
+llamada_promedio
+
+# 6.	Realice una tabla de frecuencias con el tiempo de llamada.
+d <- c %>% select(Call, duracion) %>% filter(Call == 1)
+frecuencias <- d %>% group_by(duracion) %>% summarise(Frecuencia_LLamadas = sum(Call))
+frecuencias
+# ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * 
+
+# Parte III
+
+
+#mdy("aug, 21th 2017") > mdy("oct, 21th 2017")
+
+#fecha <- readline(prompt="Ingrese su cumpleaños en la siguiente forma: DD.MM.YYYY  ejemplo: 27.01.1990: ")
+#dmy(fecha)
+
+#days(365) - days(mdy("aug, 21th 2017"))
+#make_date(month = 11, day = 21) > make_date( month = month(mdy("aug, 21th 1960")), day = day(mdy("aug, 21th 1960")))
+
+fecha <- "jul. 09 1998"
+
+vector <- c("Dec. 22 2020","Jan. 19 2020","Capricorn",
+            "Jan. 20 2020","Feb. 17 2020","Aquarius",
+            "Feb. 18 2020","Mar. 19 2020","Pisces",
+            "March 20 2020","April 19 2020","Aries",
+            "April 20 2020","May 19 2020","Taurus",
+            "May 20 2020","June 20 2020","Gemini",
+            "June 21 2020","July 21 2020","Cancer",
+            "July 22 2020","Aug. 22 2020","Leo",
+            "Aug 23 2020","Sept. 21 2020","Virgo",
+            "Sep. 22 2020","Oct. 22 2020","Libran",
+            "Oct. 23 2020","Nov. 21 2020","Scorpio",
+            "Nov. 22 2020","Dec. 21 2020","Sagittarius")
+
+matriz <- matrix(vector,12,3,TRUE)
+
+
+funcion2 <- function(fecha) {
+  if (format(as.Date(mdy(fecha)), "%m-%d") > format(as.Date(mdy(matriz[1,1])), "%m-%d") && format(as.Date(mdy(fecha)), "%m-%d") < format(as.Date(mdy(matriz[1,2])), "%m-%d")) {
+    sig <- matriz[1,3]
+  } else if (format(as.Date(mdy(fecha)), "%m-%d") > format(as.Date(mdy(matriz[2,1])), "%m-%d") && format(as.Date(mdy(fecha)), "%m-%d") < format(as.Date(mdy(matriz[2,2])), "%m-%d")) {
+    sig <- matriz[2,3]
+  } else if (format(as.Date(mdy(fecha)), "%m-%d") > format(as.Date(mdy(matriz[3,1])), "%m-%d") && format(as.Date(mdy(fecha)), "%m-%d") < format(as.Date(mdy(matriz[3,2])), "%m-%d")) {
+    sig <- matriz[3,3]
+  } else if (format(as.Date(mdy(fecha)), "%m-%d") > format(as.Date(mdy(matriz[4,1])), "%m-%d") && format(as.Date(mdy(fecha)), "%m-%d") < format(as.Date(mdy(matriz[4,2])), "%m-%d")) {
+    sig <- matriz[4,3]
+  } else if (format(as.Date(mdy(fecha)), "%m-%d") > format(as.Date(mdy(matriz[5,1])), "%m-%d") && format(as.Date(mdy(fecha)), "%m-%d") < format(as.Date(mdy(matriz[5,2])), "%m-%d")) {
+    sig <- matriz[5,3]
+  } else if (format(as.Date(mdy(fecha)), "%m-%d") > format(as.Date(mdy(matriz[6,1])), "%m-%d") && format(as.Date(mdy(fecha)), "%m-%d") < format(as.Date(mdy(matriz[6,2])), "%m-%d")) {
+    sig <- matriz[6,3]
+  } else if (format(as.Date(mdy(fecha)), "%m-%d") > format(as.Date(mdy(matriz[7,1])), "%m-%d") && format(as.Date(mdy(fecha)), "%m-%d") < format(as.Date(mdy(matriz[7,2])), "%m-%d")) {
+    sig <- matriz[7,3]
+  } else if (format(as.Date(mdy(fecha)), "%m-%d") > format(as.Date(mdy(matriz[8,1])), "%m-%d") && format(as.Date(mdy(fecha)), "%m-%d") < format(as.Date(mdy(matriz[8,2])), "%m-%d")) {
+    sig <- matriz[8,3]
+  } else if (format(as.Date(mdy(fecha)), "%m-%d") > format(as.Date(mdy(matriz[9,1])), "%m-%d") && format(as.Date(mdy(fecha)), "%m-%d") < format(as.Date(mdy(matriz[9,2])), "%m-%d")) {
+    sig <- matriz[9,3]
+  } else if (format(as.Date(mdy(fecha)), "%m-%d") > format(as.Date(mdy(matriz[10,1])), "%m-%d") && format(as.Date(mdy(fecha)), "%m-%d") < format(as.Date(mdy(matriz[10,2])), "%m-%d")) {
+    sig <- matriz[10,3]
+  } else if (format(as.Date(mdy(fecha)), "%m-%d") > format(as.Date(mdy(matriz[11,1])), "%m-%d") && format(as.Date(mdy(fecha)), "%m-%d") < format(as.Date(mdy(matriz[11,2])), "%m-%d")) {
+    sig <- matriz[11,3]
+  } else if (format(as.Date(mdy(fecha)), "%m-%d") > format(as.Date(mdy(matriz[12,1])), "%m-%d") && format(as.Date(mdy(fecha)), "%m-%d") < format(as.Date(mdy(matriz[12,2])), "%m-%d")) {
+    sig <- matriz[12,3]
+  } 
+  return(sig) 
+}
+
+funcion2("07.09.1990")
+
+# PARTE IV
+vuelos <- flights
+
+# 1. 1.	Genere 4 nuevas columnas para cada variable con formato fecha y hora.
+vuelos$fecha <- substr(vuelos$time_hour,1,10)
+vuelos$dep_time_nueva <- ifelse(vuelos$dep_time >= 1000 & vuelos$dep_time <2500, 
+                                paste0(substr(vuelos$dep_time,1,2),":",substr(vuelos$dep_time,3,4),":00"),
+                                ifelse(vuelos$dep_time >=100 & vuelos$dep_time <1000, 
+                                       paste0("0",substr(vuelos$dep_time,1,1),":",substr(vuelos$dep_time,2,3),":00"),
+                                       ifelse(vuelos$dep_time >=10 & vuelos$dep_time <100, 
+                                              paste0("00:",vuelos$dep_time,":00"), paste0("00:0",flights$dep_time,":00"))))
+
+vuelos$sched_dep_time_nueva <- ifelse(vuelos$sched_dep_time >= 1000 & vuelos$sched_dep_time <2500, 
+                                paste0(substr(vuelos$sched_dep_time,1,2),":",substr(vuelos$sched_dep_time,3,4),":00"),
+                                ifelse(vuelos$sched_dep_time >=100 & vuelos$sched_dep_time <1000, 
+                                       paste0("0",substr(vuelos$sched_dep_time,1,1),":",substr(vuelos$sched_dep_time,2,3),":00"),
+                                       ifelse(vuelos$sched_dep_time >=10 & vuelos$sched_dep_time <100, 
+                                              paste0("00:",vuelos$sched_dep_time,":00"), paste0("00:0",flights$sched_dep_time,":00"))))
+
+vuelos$arr_time_nueva <- ifelse(vuelos$arr_time >= 1000 & vuelos$arr_time <2500, 
+                                paste0(substr(vuelos$arr_time,1,2),":",substr(vuelos$arr_time,3,4),":00"),
+                                ifelse(vuelos$arr_time >=100 & vuelos$arr_time <1000, 
+                                       paste0("0",substr(vuelos$arr_time,1,1),":",substr(vuelos$arr_time,2,3),":00"),
+                                       ifelse(vuelos$arr_time >=10 & vuelos$arr_time <100, 
+                                              paste0("00:",vuelos$arr_time,":00"), paste0("00:0",flights$arr_time,":00"))))
+
+vuelos$sched_arr_time_nueva <- ifelse(vuelos$sched_arr_time >= 1000 & vuelos$sched_arr_time <2500, 
+                                paste0(substr(vuelos$sched_arr_time,1,2),":",substr(vuelos$sched_arr_time,3,4),":00"),
+                                ifelse(vuelos$sched_arr_time >=100 & vuelos$sched_arr_time <1000, 
+                                       paste0("0",substr(vuelos$sched_arr_time,1,1),":",substr(vuelos$sched_arr_time,2,3),":00"),
+                                       ifelse(vuelos$sched_arr_time >=10 & vuelos$sched_arr_time <100, 
+                                              paste0("00:",vuelos$sched_arr_time,":00"), paste0("00:0",flights$sched_arr_time,":00"))))
+
+vuelos$dep_time_fecha_hora <- paste(vuelos$fecha,vuelos$dep_time_nueva)
+vuelos$sched_dep_time_fecha_hora <- paste(vuelos$fecha,vuelos$sched_dep_time_nueva)
+vuelos$arr_time_fecha_hora <- paste(vuelos$fecha,vuelos$arr_time_nueva)
+vuelos$sched_arr_time_fecha_hora <- paste(vuelos$fecha,vuelos$sched_arr_time_nueva)
+
+#nuevas columnas
+head(vuelos[,25:28])
+
+# 2. Encuentre el delay total que existe en cada vuelo. El delay total se puede encontrar sumando el delay de la salida y el delay de la entrada.
+vuelos$dep_time_nueva <- hms(vuelos$dep_time_nueva)
+vuelos$sched_dep_time_nueva <- hms(vuelos$sched_dep_time_nueva)
+vuelos$arr_time_nueva <- hms(vuelos$arr_time_nueva)
+vuelos$sched_arr_time_nueva <- hms(vuelos$sched_arr_time_nueva)
+
+vuelos$delay <- (vuelos$dep_time_nueva - vuelos$sched_dep_time_nueva) + (vuelos$arr_time_nueva - vuelos$sched_arr_time_nueva)
+#conversion a minutos
+vuelos$delay <- period_to_seconds(vuelos$delay)/60
+head(vuelos$delay)
